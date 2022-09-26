@@ -83,6 +83,12 @@ def parser() -> argparse.ArgumentParser:
         help="Enable by default some more original ZX Spectrum Sinclair BASIC features:" " ATTR, SCREEN$, POINT",
     )
     parser_.add_argument(
+        "-L",
+        "--legacy",
+        action="store_true",
+        help="Disables one-line IFs for compatibility. Enable this if you're having trouble compiling older stuff and getting IF errors."
+    )
+    parser_.add_argument(
         "-H", "--heap-size", type=int, help=f"Sets heap size in bytes (default {OPTIONS.heap_size} bytes)"
     )
     parser_.add_argument("--debug-memory", action="store_true", default=None, help="Enables out-of-memory debug")
