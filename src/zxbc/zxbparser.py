@@ -1360,9 +1360,9 @@ def p_endif(p):
     p[0] = make_nop() if p[1] in ("END", "ENDIF") else p[1]
 
 
-def p_statement_if(p):
-    """statement : if_inline %prec RP"""
-    p[0] = p[1]
+#def p_statement_if(p):
+#    """statement : if_inline %prec RP"""
+#    p[0] = p[1]
 
 
 def p_statement_if_then_endif(p):
