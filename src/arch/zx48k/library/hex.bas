@@ -21,7 +21,7 @@ REM Avoid recursive / multiple inclusion
 ' function HEX
 '
 ' Parameters:
-'     num : 32 bit unsigned integer numbre
+'     num : 32 bit unsigned integer number
 '
 ' Returns:
 '	  4 chars str containing the HEX string representation
