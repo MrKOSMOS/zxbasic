@@ -501,7 +501,7 @@ __ALLOC_INITIALIZED_LOCAL_ARRAY:
 	    ret
 #line 139 "/zxbasic/src/arch/zx48k/library-asm/arrayalloc.asm"
 	    pop namespace
-#line 66 "arraycopy4.bas"
+#line 66 "zx48k/arraycopy4.bas"
 #line 1 "/zxbasic/src/arch/zx48k/library-asm/arraystrfree.asm"
 	; This routine is in charge of freeing an array of strings from memory
 	; HL = Pointer to start of array in memory
@@ -706,7 +706,7 @@ __ARRAYSTR_FREE_MEM: ; like the above, buf also frees the array itself
 	    pop hl		; recovers array block pointer
 	    jp __MEM_FREE	; Frees it and returns from __MEM_FREE
 	    pop namespace
-#line 67 "arraycopy4.bas"
+#line 67 "zx48k/arraycopy4.bas"
 #line 1 "/zxbasic/src/arch/zx48k/library-asm/strarraycpy.asm"
 	; (K)opyleft - by Jose M. Rodriguez de la Rosa (a.k.a. Boriel)
 	; 2009 - This is Free OpenSource BSD code
@@ -950,7 +950,7 @@ STR_ARRAYCOPY:
 	    pop hl  ; ret address
 	    pop bc  ; num of elements
 	    pop de  ; source array + offset to the 1st elem.
-	    ex (sp), hl ; Calle -> hl = destiny array + offset to the 1st elem.
+	    ex (sp), hl ; Callee -> hl = destiny array + offset to the 1st elem.
 	; FASTCALL ENTRY
 	; HL = a$ + offset
 	; DE = b$ + offset
@@ -987,7 +987,7 @@ LOOP:
 	    jp LOOP
 	    ENDP
 	    pop namespace
-#line 68 "arraycopy4.bas"
+#line 68 "zx48k/arraycopy4.bas"
 .LABEL.__LABEL0:
 	DEFB 00h
 	DEFB 00h

@@ -9,20 +9,21 @@
 #                    the GNU General License
 # ----------------------------------------------------------------------
 
-from typing import List, Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from src import symbols
-from src.api import global_, check as check, errmsg
+from src.api import check as check
+from src.api import errmsg, global_
 from src.api.config import OPTIONS
-from src.api.constants import TYPE, DEPRECATED_SUFFIXES, SUFFIX_TYPE, CLASS, SCOPE
+from src.api.constants import CLASS, DEPRECATED_SUFFIXES, SCOPE, SUFFIX_TYPE, TYPE
 from src.api.debug import __DEBUG__
+from src.api.errmsg import error as syntax_error
 from src.api.errmsg import (
-    error as syntax_error,
-    warning_not_used,
-    warning_implicit_type,
-    syntax_error_not_array_nor_func,
     syntax_error_cannot_define_default_array_argument,
     syntax_error_func_type_mismatch,
+    syntax_error_not_array_nor_func,
+    warning_implicit_type,
+    warning_not_used,
 )
 from src.api.symboltable.scope import Scope
 from src.symbols.label import SymbolLABEL
@@ -52,7 +53,7 @@ class SymbolTable:
     Do not use 0 to reference the global scope. Use symboltable.global_scope
     and symboltable.current_scope to get such numbers.
 
-    Accessing symboltable[symboltable.current_scope] returns an Scope object.
+    Accessing symboltable[symboltable.current_scope] returns a Scope object.
     """
 
     def __init__(self):
@@ -119,10 +120,6 @@ class SymbolTable:
         if isinstance(entry, symbols.TYPE):
             return entry  # If it's a type declaration, we're done
 
-        # HINT: The following should be done by the respective callers!
-        # entry.callable = None  # True if function, strings or arrays
-        # entry.class_ = None  # TODO: important
-
         entry.mangled = self.make_child_namespace(self.current_namespace, entry.name)  # Mangled name
         entry.type_ = type_  # type_ now reflects entry sigil (i.e. a$ => 'string' type) if any
         entry.scopeRef = self.current_scope
@@ -143,7 +140,9 @@ class SymbolTable:
     # -------------------------------------------------------------------------
     # Symbol Table Checks
     # -------------------------------------------------------------------------
-    def check_is_declared(self, id_: str, lineno: int, classname="identifier", scope=None, show_error=True) -> bool:
+    def check_is_declared(
+        self, id_: str, lineno: int, classname: str = "identifier", scope=None, show_error=True
+    ) -> bool:
         """Checks if the given id is already defined in any scope
         or raises a Syntax Error.
 
@@ -335,7 +334,7 @@ class SymbolTable:
         ignore_explicit_flag=False,
     ):
         """Access a symbol by its identifier and checks if it exists.
-        If not, it's supposed to be an implicit declared variable.
+        If not, it's supposed to be an implicitly declared variable.
 
         default_class is the class to use in case of an undeclared-implicit-accessed id
         """
@@ -712,7 +711,7 @@ class SymbolTable:
         )
         return entry
 
-    def declare_func(self, id_: str, lineno: int, type_=None, class_=CLASS.function):
+    def declare_func(self, id_: str, lineno: int, type_=None, class_=CLASS.function) -> Optional[symbols.FUNCTION]:
         """Declares a function in the current scope.
         Checks whether the id exist or not (error if exists).
         And creates the entry at the symbol table.

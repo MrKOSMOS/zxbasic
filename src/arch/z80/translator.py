@@ -3,32 +3,27 @@
 
 from collections import namedtuple
 
-from src.api.constants import TYPE
-from src.api.constants import SCOPE
-from src.api.constants import CLASS
-from src.api.constants import CONVENTION
-
+import src.api.check as check
 import src.api.errmsg
 import src.api.global_ as gl
-import src.api.check as check
-
+from src import symbols
+from src.api.config import OPTIONS
+from src.api.constants import CLASS, CONVENTION, SCOPE, TYPE
 from src.api.debug import __DEBUG__
 from src.api.errmsg import error
-from src.api.config import OPTIONS
+from src.api.errors import (
+    InternalError,
+    InvalidBuiltinFunctionError,
+    InvalidLoopError,
+    InvalidOperatorError,
+)
 from src.api.global_ import optemps
-from src.api.errors import InvalidLoopError
-from src.api.errors import InvalidOperatorError
-from src.api.errors import InvalidBuiltinFunctionError
-from src.api.errors import InternalError
-from src.zxbpp import zxbpp
-
 from src.arch.z80 import backend
-from src.arch.z80.backend.runtime import Labels as RuntimeLabel
 from src.arch.z80.backend._float import _float
-from src.arch.z80.translatorvisitor import TranslatorVisitor, JumpTable
-
-from src import symbols
+from src.arch.z80.backend.runtime import Labels as RuntimeLabel
+from src.arch.z80.translatorvisitor import JumpTable, TranslatorVisitor
 from src.symbols.type_ import Type
+from src.zxbpp import zxbpp
 
 __all__ = ["Translator", "VarTranslator", "FunctionTranslator"]
 
@@ -266,16 +261,25 @@ class Translator(TranslatorVisitor):
         return t
 
     def visit_ARRAYCOPY(self, node):
-        t1 = self._emit_arraycopy_child(node.children[0])
-        t2 = self._emit_arraycopy_child(node.children[1])
-
-        tr = node.children[1]
+        t_source = node.args[1]
+        t_dest = node.args[0]
         t = optemps.new_t()
-        if tr.type_ != Type.string:
-            self.ic_load(gl.PTR_TYPE, t, "%i" % tr.size)
+
+        if t_source.type_ != Type.string:
+            t1 = self._emit_arraycopy_child(t_dest)
+            t2 = self._emit_arraycopy_child(t_source)
+            self.ic_load(gl.BOUND_TYPE, t, "%i" % t_source.size)
             self.ic_memcopy(t1, t2, t)
         else:
-            self.ic_load(gl.PTR_TYPE, t, "%i" % tr.count)
+            t2 = self._emit_arraycopy_child(t_dest)
+            if t_dest.scope == SCOPE.global_:
+                self.ic_load(gl.PTR_TYPE, optemps.new_t(), t2)
+
+            t1 = self._emit_arraycopy_child(t_source)
+            if t_source.scope == SCOPE.global_:
+                self.ic_load(gl.PTR_TYPE, optemps.new_t(), t1)
+
+            self.ic_load(gl.BOUND_TYPE, t, "%i" % t_source.count)
             self.runtime_call(RuntimeLabel.STR_ARRAYCOPY, 0)
 
     def visit_LETARRAY(self, node):
@@ -700,6 +704,7 @@ class Translator(TranslatorVisitor):
     # Drawing Primitives PLOT, DRAW, DRAW3, CIRCLE
     # -----------------------------------------------------------------------------------------------------
     def visit_PLOT(self, node):
+        self.norm_attr()
         TMP_HAS_ATTR = self.check_attr(node, 2)
         yield TMP_HAS_ATTR
         yield node.children[0]
@@ -708,9 +713,9 @@ class Translator(TranslatorVisitor):
         self.ic_fparam(node.children[1].type_, node.children[1].t)
         self.runtime_call(RuntimeLabel.PLOT, 0)
         self.HAS_ATTR = TMP_HAS_ATTR is not None
-        self.norm_attr()
 
     def visit_DRAW(self, node):
+        self.norm_attr()
         TMP_HAS_ATTR = self.check_attr(node, 2)
         yield TMP_HAS_ATTR
         yield node.children[0]
@@ -719,9 +724,9 @@ class Translator(TranslatorVisitor):
         self.ic_fparam(node.children[1].type_, node.children[1].t)
         self.runtime_call(RuntimeLabel.DRAW, 0)
         self.HAS_ATTR = TMP_HAS_ATTR is not None
-        self.norm_attr()
 
     def visit_DRAW3(self, node):
+        self.norm_attr()
         TMP_HAS_ATTR = self.check_attr(node, 3)
         yield TMP_HAS_ATTR
         yield node.children[0]
@@ -732,9 +737,9 @@ class Translator(TranslatorVisitor):
         self.ic_fparam(node.children[2].type_, node.children[2].t)
         self.runtime_call(RuntimeLabel.DRAW3, 0)
         self.HAS_ATTR = TMP_HAS_ATTR is not None
-        self.norm_attr()
 
     def visit_CIRCLE(self, node):
+        self.norm_attr()
         TMP_HAS_ATTR = self.check_attr(node, 3)
         yield TMP_HAS_ATTR
         yield node.children[0]
@@ -745,7 +750,6 @@ class Translator(TranslatorVisitor):
         self.ic_fparam(node.children[2].type_, node.children[2].t)
         self.runtime_call(RuntimeLabel.CIRCLE, 0)
         self.HAS_ATTR = TMP_HAS_ATTR is not None
-        self.norm_attr()
 
     # endregion
 
@@ -759,6 +763,7 @@ class Translator(TranslatorVisitor):
         self.ic_out(node.children[0].t, node.children[1].t)
 
     def visit_PRINT(self, node):
+        self.norm_attr()
         for i in node.children:
             yield i
 
@@ -788,19 +793,8 @@ class Translator(TranslatorVisitor):
             }[self.TSUFFIX(i.type_)]
             self.runtime_call(label, 0)
 
-        for i in node.children:
-            if i.token in self.ATTR_TMP or self.has_control_chars(i):
-                self.HAS_ATTR = True
-                break
-
         if node.eol:
-            if self.HAS_ATTR:
-                self.runtime_call(RuntimeLabel.PRINT_EOL_ATTR, 0)
-                self.HAS_ATTR = False
-            else:
-                self.runtime_call(RuntimeLabel.PRINT_EOL, 0)
-        else:
-            self.norm_attr()
+            self.runtime_call(RuntimeLabel.PRINT_EOL, 0)
 
     def visit_PRINT_AT(self, node):
         yield node.children[0]
@@ -1453,7 +1447,11 @@ class FunctionTranslator(Translator):
             elif local_var.class_ == CLASS.const or local_var.scope == SCOPE.parameter:
                 continue
             else:  # Local vars always defaults to 0, so if 0 we do nothing
-                if local_var.default_value is not None and local_var.default_value != 0:
+                if (
+                    not isinstance(local_var, symbols.FUNCTION)
+                    and local_var.default_value is not None
+                    and local_var.default_value != 0
+                ):
                     if isinstance(local_var.default_value, symbols.CONST) and local_var.default_value.token == "CONST":
                         self.ic_lvarx(local_var.type_, local_var.offset, [self.traverse_const(local_var.default_value)])
                     else:
@@ -1463,7 +1461,6 @@ class FunctionTranslator(Translator):
         for i in node.body:
             yield i
 
-        self.norm_attr()
         self.ic_label("%s__leave" % node.mangled)
 
         # Now free any local string from memory.
