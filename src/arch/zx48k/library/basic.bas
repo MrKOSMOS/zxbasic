@@ -29,7 +29,7 @@ Multiple sentences can be executed as well:
 
 Of course, the parameter can be any valid string parameter, so a BASIC program
 can build a sentence or a group of sentences and execute them using this
-function. Think of it as a even more versatile VAL or VAL$ function.
+function. Think of it as an even more versatile VAL or VAL$ function.
 
 Note that this function returns the value of the BC register.
 
