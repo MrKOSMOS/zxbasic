@@ -5,9 +5,7 @@ import unittest
 from unittest import TestCase
 
 from src.api.constants import TYPE
-from src.symbols import NUMBER
-from src.symbols import BASICTYPE
-from src.symbols import CONST
+from src.symbols.sym import BASICTYPE, CONSTEXPR, NUMBER
 
 
 class TestSymbolNUMBER(TestCase):
@@ -44,8 +42,8 @@ class TestSymbolNUMBER(TestCase):
 
     def test__cmp__const(self):
         n = NUMBER(0, lineno=1)
-        m = CONST(NUMBER(1, lineno=2), lineno=2)
-        m2 = CONST(NUMBER(0, lineno=3), lineno=3)
+        m = CONSTEXPR(NUMBER(1, lineno=2), lineno=2)
+        m2 = CONSTEXPR(NUMBER(0, lineno=3), lineno=3)
 
         self.assertNotEqual(n, m)
         self.assertEqual(n, n)
@@ -71,7 +69,7 @@ class TestSymbolNUMBER(TestCase):
 
     def test__add__num_const(self):
         a = NUMBER(1, 0)
-        b = CONST(NUMBER(2, 0), 0)
+        b = CONSTEXPR(NUMBER(2, 0), 0)
         self.assertEqual((a + b).t, "3")
 
     def test__add__num_value(self):
@@ -80,7 +78,7 @@ class TestSymbolNUMBER(TestCase):
 
     def test__radd__num_const(self):
         a = NUMBER(1, 0)
-        b = CONST(NUMBER(2, 0), 0)
+        b = CONSTEXPR(NUMBER(2, 0), 0)
         self.assertEqual((b + a).t, "3")
 
     def test__radd__num_value(self):
@@ -94,7 +92,7 @@ class TestSymbolNUMBER(TestCase):
 
     def test__sub__num_const(self):
         a = NUMBER(1, 0)
-        b = CONST(NUMBER(2, 0), 0)
+        b = CONSTEXPR(NUMBER(2, 0), 0)
         self.assertEqual((a - b).t, "-1")
 
     def test__sub__num_value(self):
@@ -103,7 +101,7 @@ class TestSymbolNUMBER(TestCase):
 
     def test__rsub__num_const(self):
         a = NUMBER(2, 0)
-        b = CONST(NUMBER(1, 0), 0)
+        b = CONSTEXPR(NUMBER(1, 0), 0)
         self.assertEqual((b - a).t, "-1")
 
     def test__rsub__num_value(self):
@@ -117,7 +115,7 @@ class TestSymbolNUMBER(TestCase):
 
     def test__mul__num_const(self):
         a = NUMBER(3, 0)
-        b = CONST(NUMBER(2, 0), 0)
+        b = CONSTEXPR(NUMBER(2, 0), 0)
         self.assertEqual((a * b).t, "6")
 
     def test__mul__num_value(self):
@@ -126,7 +124,7 @@ class TestSymbolNUMBER(TestCase):
 
     def test__rmul__num_const(self):
         a = NUMBER(3, 0)
-        b = CONST(NUMBER(2, 0), 0)
+        b = CONSTEXPR(NUMBER(2, 0), 0)
         self.assertEqual((b * a).t, "6")
 
     def test__rmul__num_value(self):
@@ -140,7 +138,7 @@ class TestSymbolNUMBER(TestCase):
 
     def test__div__num_const(self):
         a = NUMBER(3, 0)
-        b = CONST(NUMBER(-2, 0), 0)
+        b = CONSTEXPR(NUMBER(-2, 0), 0)
         self.assertEqual((a / b).t, str(a.value / b.expr.value))
 
     def test__div__num_value(self):
@@ -148,7 +146,7 @@ class TestSymbolNUMBER(TestCase):
         self.assertEqual((a / -2.0).t, "-1.5")
 
     def test__rdiv__num_const(self):
-        a = CONST(NUMBER(-3, 0), 0)
+        a = CONSTEXPR(NUMBER(-3, 0), 0)
         b = NUMBER(2, 0)
         self.assertEqual((a / b).t, str(a.expr.value / b.value))
 

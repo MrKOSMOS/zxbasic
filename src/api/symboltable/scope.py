@@ -10,11 +10,11 @@
 # ----------------------------------------------------------------------
 
 from collections import OrderedDict
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from src.api.config import OPTIONS
+from src.symbols.id_ import SymbolID
 from src.symbols.symbol_ import Symbol
-from src.symbols.var import SymbolVAR
 
 
 class Scope:
@@ -22,7 +22,7 @@ class Scope:
 
     A Scope is just a dictionary.
 
-    To get a symbol, just access it by it's name. So scope['a'] will
+    To get a symbol, just access it by its name. So scope['a'] will
     return the 'a' symbol (e.g. a declared variable 'a') or None
     if nothing is declared in that scope (no KeyError exception is raised
     if the identifier is not defined in such scope).
@@ -30,7 +30,7 @@ class Scope:
     The caseins dict stores the symbol names in lowercase only if
     the global OPTION ignore case is enabled (True). This is because
     most BASIC dialects are case-insensitive. 'caseins' will be used
-    as a fallback if the symbol name does not exists.
+    as a fallback if the symbol name does not exist.
 
     On init() the parent mangle can be stored. The mangle is a prefix
     added to every symbol to avoid name collision.
@@ -42,17 +42,19 @@ class Scope:
     """
 
     def __init__(self, namespace: str = "", parent_scope: Optional["Scope"] = None):
-        self.symbols: Dict[str, SymbolVAR] = OrderedDict()
-        self.caseins: Dict[str, SymbolVAR] = OrderedDict()
+        from src.symbols.funcdecl import SymbolFUNCDECL
+
+        self.symbols: Dict[str, SymbolID] = OrderedDict()
+        self.caseins: Dict[str, SymbolID] = OrderedDict()
         self.namespace: str = namespace
-        self.owner: Optional[SymbolVAR] = None  # Function, Sub, etc. owning this scope
+        self._owner: Optional[SymbolFUNCDECL] = None  # Function, Sub, etc. owning this scope
         self.parent_scope: Optional["Scope"] = parent_scope
         self.parent_namespace: Optional[str] = parent_scope.namespace if parent_scope is not None else None
 
-    def __getitem__(self, key: str) -> Optional[SymbolVAR]:
+    def __getitem__(self, key: str) -> Optional[SymbolID]:
         return self.symbols.get(key, self.caseins.get(key.lower(), None))
 
-    def __setitem__(self, key: str, value: SymbolVAR):
+    def __setitem__(self, key: str, value: SymbolID):
         assert isinstance(value, Symbol)
         self.symbols[key] = value
         if value.caseins:  # Declared with case-insensitive option?
@@ -76,3 +78,14 @@ class Scope:
         if filter_by_opt and OPTIONS.optimization_level > 1:
             return [(x, y) for x, y in self.symbols.items() if y.accessed]
         return self.symbols.items()
+
+    @property
+    def owner(self):
+        return self._owner
+
+    @owner.setter
+    def owner(self, value):
+        from src.symbols.funcdecl import SymbolFUNCDECL
+
+        assert value is None or isinstance(value, SymbolFUNCDECL)
+        self._owner = value

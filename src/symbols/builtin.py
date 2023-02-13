@@ -9,11 +9,11 @@
 #                    the GNU General License
 # ----------------------------------------------------------------------
 
-from .symbol_ import Symbol
-from .number import SymbolNUMBER
-from .type_ import SymbolTYPE
-
 import src.api.check as check
+
+from .number import SymbolNUMBER
+from .symbol_ import Symbol
+from .type_ import SymbolTYPE
 
 
 class SymbolBUILTIN(Symbol):
@@ -22,7 +22,7 @@ class SymbolBUILTIN(Symbol):
     def __init__(self, lineno, fname, type_=None, *operands):
         assert isinstance(lineno, int)
         assert type_ is None or isinstance(type_, SymbolTYPE)
-        super(SymbolBUILTIN, self).__init__(*operands)
+        super().__init__(*operands)
         self.lineno = lineno
         self.fname = fname
         self.type_ = type_

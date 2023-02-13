@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
 
 import os
-
 from typing import List
 
 import src.api.config
 import src.api.global_ as gl
-
 from src import arch
-
-from src.api.utils import open_file
+from src.api import debug, errmsg
 from src.api.config import OPTIONS
-from src.zxbc import args_parser
-from src.api import errmsg
-from src.api import debug
-from src.zxbpp import zxbpp
-from src.zxbc import zxbparser
+from src.api.utils import open_file
+from src.zxbc import args_parser, zxbparser
 
-__all__ = ["FileType", "parse_options"]
+__all__ = ["FileType", "parse_options", "set_option_defines"]
 
 
 class FileType:
@@ -87,13 +81,16 @@ def parse_options(args: List[str] = None):
     if OPTIONS.org is None:
         parser.error(f"Invalid --org option '{options.org}'")
 
+    OPTIONS.heap_address = (
+        OPTIONS.heap_address if options.heap_address is None else src.api.utils.parse_int(options.heap_address)
+    )
+
     if options.defines:
         for i in options.defines:
             macro = list(i.split("=", 1))
             name = macro[0]
             val = "".join(macro[1:])
             OPTIONS.__DEFINES[name] = val
-            zxbpp.ID_TABLE.define(name, value=val, lineno=0)
 
     if OPTIONS.sinclair:
         OPTIONS.array_base = 1
@@ -133,17 +130,7 @@ def parse_options(args: List[str] = None):
         parser.error("No such file or directory: '%s'" % args[0])
         return 2
 
-    if OPTIONS.memory_check:
-        OPTIONS.__DEFINES["__MEMORY_CHECK__"] = ""
-        zxbpp.ID_TABLE.define("__MEMORY_CHECK__", lineno=0)
-
-    if OPTIONS.array_check:
-        OPTIONS.__DEFINES["__CHECK_ARRAY_BOUNDARY__"] = ""
-        zxbpp.ID_TABLE.define("__CHECK_ARRAY_BOUNDARY__", lineno=0)
-
-    if OPTIONS.enable_break:
-        OPTIONS.__DEFINES["__ENABLE_BREAK__"] = ""
-        zxbpp.ID_TABLE.define("__ENABLE_BREAK__", lineno=0)
+    set_option_defines()
 
     OPTIONS.include_path = options.include_path
     OPTIONS.input_filename = zxbparser.FILENAME = os.path.basename(args[0])
@@ -157,3 +144,15 @@ def parse_options(args: List[str] = None):
         OPTIONS.stderr = open_file(OPTIONS.stderr_filename, "wt", "utf-8")
 
     return options
+
+
+def set_option_defines():
+    """Sets some macros automatically, according to options"""
+    if OPTIONS.memory_check:
+        OPTIONS.__DEFINES["__MEMORY_CHECK__"] = ""
+
+    if OPTIONS.array_check:
+        OPTIONS.__DEFINES["__CHECK_ARRAY_BOUNDARY__"] = ""
+
+    if OPTIONS.enable_break:
+        OPTIONS.__DEFINES["__ENABLE_BREAK__"] = ""

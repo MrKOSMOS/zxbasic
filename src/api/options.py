@@ -9,14 +9,11 @@
 #                    the GNU General License
 # ----------------------------------------------------------------------
 
-import json
 import enum
+import json
+from typing import Any, Dict, List
 
-from typing import Dict
-from typing import List
-from typing import Any
-
-from src.api.errors import Error
+from src.api.exception import Error
 
 __all__ = ["Option", "Options", "ANYTYPE", "Action"]
 
