@@ -11,18 +11,16 @@
 
 from typing import Optional
 
-import src.api.global_ as gl
-import src.api.errmsg as errmsg
 import src.api.check as check
-
+import src.api.errmsg as errmsg
+import src.api.global_ as gl
 from src.api.constants import SCOPE
-
-from .call import SymbolCALL
-from .number import SymbolNUMBER as NUMBER
-from .typecast import SymbolTYPECAST as TYPECAST
-from .binary import SymbolBINARY as BINARY
-from .vararray import SymbolVARARRAY
-from .arglist import SymbolARGLIST
+from src.symbols.arglist import SymbolARGLIST
+from src.symbols.binary import SymbolBINARY as BINARY
+from src.symbols.call import SymbolCALL
+from src.symbols.id_ import SymbolID
+from src.symbols.number import SymbolNUMBER as NUMBER
+from src.symbols.typecast import SymbolTYPECAST as TYPECAST
 
 
 class SymbolARRAYACCESS(SymbolCALL):
@@ -48,8 +46,8 @@ class SymbolARRAYACCESS(SymbolCALL):
         return self.children[0]
 
     @entry.setter
-    def entry(self, value):
-        assert isinstance(value, SymbolVARARRAY)
+    def entry(self, value: SymbolID):
+        assert isinstance(value, SymbolID) and value.token == "VARARRAY"
         if self.children is None or not self.children:
             self.children = [value]
         else:

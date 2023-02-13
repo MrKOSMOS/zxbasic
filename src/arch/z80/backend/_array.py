@@ -12,12 +12,12 @@
 
 from typing import List
 
-from src.arch.z80.backend.common import REQUIRES, is_int, runtime_call, Quad
-from src.arch.z80.backend.runtime import Labels as RuntimeLabel
-from src.arch.z80.backend.errors import InvalidICError
-
+from src.arch.z80.backend._32bit import _32bit_oper
 from src.arch.z80.backend._f16 import _f16_oper
-from src.arch.z80.backend._float import _fpush, _float_oper
+from src.arch.z80.backend._float import _float_oper, _fpush
+from src.arch.z80.backend.common import REQUIRES, Quad, is_int, runtime_call
+from src.arch.z80.backend.errors import InvalidICError
+from src.arch.z80.backend.runtime import Labels as RuntimeLabel
 
 
 def _addr(value) -> List[str]:
@@ -254,7 +254,7 @@ def _astore32(ins: Quad) -> List[str]:
         if indirect:
             output.append("push hl")
             output.append("ld hl, %i" % (value & 0xFFFF))
-            output.append(runtime_call(RuntimeLabel.ILOAD32))  # TODO: Check if this is ever used
+            output.append(runtime_call(RuntimeLabel.ILOAD32))
             output.append("ld b, h")
             output.append("ld c, l")  # BC = Lower 16 bits
             output.append("pop hl")
@@ -262,10 +262,9 @@ def _astore32(ins: Quad) -> List[str]:
             output.append("ld de, %i" % (value >> 16))
             output.append("ld bc, %i" % (value & 0xFFFF))
     except ValueError:
-        output.append("pop bc")
-        output.append("pop de")
+        output.extend(_32bit_oper(value, preserveHL=True))
 
-    output.append(runtime_call(RuntimeLabel.STORE32))  # TODO: Check if this is ever used
+    output.append(runtime_call(RuntimeLabel.STORE32))
 
     return output
 

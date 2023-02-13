@@ -9,16 +9,15 @@
 #                    the GNU General License
 # ----------------------------------------------------------------------
 
-import src.api.global_ as gl
-import src.api.config as config
 import src.api.check as check
-
-from .symbol_ import Symbol
-from .number import SymbolNUMBER as NUMBER
-from .typecast import SymbolTYPECAST as TYPECAST
-from .binary import SymbolBINARY as BINARY
-from .string_ import SymbolSTRING as STRING
-from .type_ import Type
+import src.api.config as config
+import src.api.global_ as gl
+from src.symbols.binary import SymbolBINARY as BINARY
+from src.symbols.number import SymbolNUMBER as NUMBER
+from src.symbols.string_ import SymbolSTRING as STRING
+from src.symbols.symbol_ import Symbol
+from src.symbols.type_ import Type
+from src.symbols.typecast import SymbolTYPECAST as TYPECAST
 
 
 class SymbolSTRSLICE(Symbol):

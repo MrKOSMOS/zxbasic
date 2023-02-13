@@ -12,27 +12,23 @@
 # ----------------------------------------------------------------------
 
 import os
-
 from typing import Optional
 
-import src.ply.yacc as yacc
 import src.api.utils
-from src.zxbasm import global_ as asm_gl
-
+import src.ply.yacc as yacc
 from src import outfmt
 from src.api import global_ as gl
-
-from src.api.debug import __DEBUG__
 from src.api.config import OPTIONS
-from src.api.errmsg import error
-from src.zxbpp import zxbpp
-
+from src.api.debug import __DEBUG__
+from src.api.errmsg import error, warning
 from src.zxbasm import asmlex, basic
+from src.zxbasm import global_ as asm_gl
+from src.zxbasm.asm import Asm, Container
 from src.zxbasm.asmlex import tokens  # noqa
-from src.zxbasm.global_ import DOT
 from src.zxbasm.expr import Expr
-from src.zxbasm.asm import Container, Asm
+from src.zxbasm.global_ import DOT
 from src.zxbasm.memory import Memory
+from src.zxbpp import zxbpp
 
 LEXER = asmlex.Lexer()
 
@@ -387,19 +383,49 @@ def p_align(p):
 
 
 def p_incbin(p):
-    """asm : INCBIN STRING"""
+    """asm : INCBIN STRING
+    | INCBIN STRING COMMA expr
+    | INCBIN STRING COMMA expr COMMA expr
+    """
+
     try:
         fname = zxbpp.search_filename(p[2], p.lineno(2), local_first=True)
         if not fname:
             p[0] = None
             return
+
         with src.api.utils.open_file(fname, "rb") as f:
             filecontent = f.read()
+
     except IOError:
         error(p.lineno(2), "cannot read file '%s'" % p[2])
         p[0] = None
         return
 
+    offset = 0
+    length = None
+
+    if len(p) > 4:
+        offset = p[4].eval()
+
+    if len(p) > 6:
+        length = p[6].eval()
+        if length < 1:
+            error(p.lineno(5), "INCBIN length must be greater than 0")
+
+    if offset < 0:
+        offset = len(filecontent) + offset
+        if offset < 0 or offset >= len(filecontent):
+            error(p.lineno(4), "INCBIN offset is out of range")
+
+    if length is None:
+        length = len(filecontent) - offset
+
+    if offset + length > len(filecontent):
+        excess = len(filecontent) - (offset + length)
+        warning(p.lineno(5), f"INCBIN length if beyond file length by {excess} bytes")
+
+    filecontent = filecontent[offset : offset + length]
     p[0] = Asm(p.lineno(1), "DEFB", filecontent)
 
 

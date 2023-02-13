@@ -9,9 +9,9 @@
 #                    the GNU General License
 # ----------------------------------------------------------------------
 
+import types
 from typing import Any, Callable, Type
 
-import types
 from .tree import Tree
 
 
@@ -20,6 +20,8 @@ from .tree import Tree
 # ----------------------------------------------------------------------
 class Ast(Tree):
     """Adds some methods for easier coding..."""
+
+    __slots__: tuple[str, ...] = tuple()
 
     @property
     def token(self):

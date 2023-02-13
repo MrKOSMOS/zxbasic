@@ -12,10 +12,10 @@
 
 from typing import List
 
-from src.arch.z80.backend.common import REQUIRES, is_int, _int_ops, tmp_label, runtime_call, Quad
-from src.arch.z80.backend.runtime import Labels as RuntimeLabel
+from src.api.tmp_labels import tmp_label
 from src.arch.z80.backend._8bit import _8bit_oper
-
+from src.arch.z80.backend.common import REQUIRES, Quad, _int_ops, is_int, runtime_call
+from src.arch.z80.backend.runtime import Labels as RuntimeLabel
 
 # -----------------------------------------------------
 # 32 bits operands
