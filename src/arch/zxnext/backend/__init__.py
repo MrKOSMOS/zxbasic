@@ -5,7 +5,6 @@ from src.api.config import OPTIONS, Action
 from src.arch.z80.backend import (
     HI16,
     INITS,
-    LABEL_COUNTER,
     LO16,
     MEMINITS,
     MEMORY,
@@ -19,19 +18,16 @@ from src.arch.z80.backend import (
     emit_end,
     emit_start,
     engine,
-    tmp_label,
 )
 from src.arch.z80.backend.runtime.namespace import NAMESPACE
 from src.arch.zxnext.backend._8bit import _mul8
 from src.arch.zxnext.peephole import OPTS_PATH
 
 __all__ = [
-    "tmp_label",
     "_fpop",
     "HI16",
     "INITS",
     "LO16",
-    "LABEL_COUNTER",
     "MEMORY",
     "MEMINITS",
     "QUADS",
@@ -57,6 +53,8 @@ def init():
     OPTIONS(Action.ADD_IF_NOT_DEFINED, name="org", type=int, default=32768)
     # Default HEAP SIZE (Dynamic memory) in bytes
     OPTIONS(Action.ADD_IF_NOT_DEFINED, name="heap_size", type=int, default=4768, ignore_none=True)  # A bit more than 4K
+    # Default HEAP ADDRESS (Dynamic memory) address
+    OPTIONS(Action.ADD_IF_NOT_DEFINED, name="heap_address", type=int, default=None, ignore_none=False)
     # Labels for HEAP START (might not be used if not needed)
     OPTIONS(Action.ADD_IF_NOT_DEFINED, name="heap_start_label", type=str, default=f"{NAMESPACE}.ZXBASIC_MEM_HEAP")
     # Labels for HEAP SIZE (might not be used if not needed)

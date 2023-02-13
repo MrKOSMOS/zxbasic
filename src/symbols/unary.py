@@ -10,22 +10,21 @@
 # ----------------------------------------------------------------------
 
 import src.api.check as check
-
-from .number import SymbolNUMBER
-from .string_ import SymbolSTRING
-from .symbol_ import Symbol
-from .type_ import SymbolTYPE
-from .type_ import Type as TYPE
-from .typecast import SymbolTYPECAST
+from src.symbols.number import SymbolNUMBER
+from src.symbols.string_ import SymbolSTRING
+from src.symbols.symbol_ import Symbol
+from src.symbols.type_ import SymbolTYPE
+from src.symbols.type_ import Type as TYPE
+from src.symbols.typecast import SymbolTYPECAST
 
 
 class SymbolUNARY(Symbol):
-    """Defines an UNARY EXPRESSION e.g. (a + b)
+    """Defines a UNARY EXPRESSION e.g. (a + b)
     Only the operator (e.g. 'PLUS') is stored.
     """
 
     def __init__(self, oper, operand, lineno, type_=None):
-        super(SymbolUNARY, self).__init__(operand)
+        super().__init__(operand)
         self.lineno = lineno
         self.operator = oper
         self._type = type_

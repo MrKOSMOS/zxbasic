@@ -9,22 +9,22 @@
 #                    the GNU General License
 # ----------------------------------------------------------------------
 
+import src
 import src.api.global_ as gl
-
-from .symbol_ import Symbol
+from src.symbols.symbol_ import Symbol
 
 # ----------------------------------------------------------------------
 # CONST Symbol object
 # ----------------------------------------------------------------------
 
 
-class SymbolCONST(Symbol):
+class SymbolCONSTEXPR(Symbol):
     """Defines a constant expression (not numerical, e.g. a Label or a @label,
     or a more complex one like @label + 5)
     """
 
     def __init__(self, expr, lineno):
-        super(SymbolCONST, self).__init__(expr)
+        super().__init__(expr)
         self.lineno = lineno
         self._t = gl.optemps.new_t()
 
@@ -49,8 +49,5 @@ class SymbolCONST(Symbol):
 
     @property
     def t(self):
-        return self._t
-
-    @t.setter
-    def t(self, value):
-        self._t = value
+        result = src.arch.target.Translator.traverse_const(self)
+        return f"#{result}"

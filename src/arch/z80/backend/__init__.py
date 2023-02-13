@@ -7,6 +7,7 @@ from collections import defaultdict
 from typing import Dict, List, Set
 
 from src.api.config import OPTIONS, Action
+from src.api.tmp_labels import TMP_LABELS
 from src.arch.z80.backend import common
 from src.arch.z80.backend.common import (
     AT_END,
@@ -14,7 +15,6 @@ from src.arch.z80.backend.common import (
     DATA_END_LABEL,
     DATA_LABEL,
     INITS,
-    LABEL_COUNTER,
     MAIN_LABEL,
     MEMINITS,
     MEMORY,
@@ -23,12 +23,10 @@ from src.arch.z80.backend.common import (
     REQUIRES,
     START_LABEL,
     TMP_COUNTER,
-    TMP_LABELS,
     TMP_STORAGES,
     ICInfo,
     Quad,
     runtime_call,
-    tmp_label,
 )
 from src.arch.z80.backend.runtime import Labels as RuntimeLabel
 from src.arch.z80.backend.runtime.namespace import NAMESPACE
@@ -341,12 +339,10 @@ from .generic import (
 )
 
 __all__ = [
-    "tmp_label",
     "_fpop",
     "HI16",
     "INITS",
     "LO16",
-    "LABEL_COUNTER",
     "MEMORY",
     "MEMINITS",
     "QUADS",
@@ -362,6 +358,8 @@ __all__ = [
 OPTIONS(Action.ADD_IF_NOT_DEFINED, name="org", type=int, default=32768)
 # Default HEAP SIZE (Dynamic memory) in bytes
 OPTIONS(Action.ADD_IF_NOT_DEFINED, name="heap_size", type=int, default=4768, ignore_none=True)  # A bit more than 4K
+# Default HEAP ADDRESS (Dynamic memory) address
+OPTIONS(Action.ADD_IF_NOT_DEFINED, name="heap_address", type=int, default=None, ignore_none=False)
 
 
 def init():
@@ -374,6 +372,8 @@ def init():
     OPTIONS(Action.ADD_IF_NOT_DEFINED, name="org", type=int, default=32768)
     # Default HEAP SIZE (Dynamic memory) in bytes
     OPTIONS(Action.ADD_IF_NOT_DEFINED, name="heap_size", type=int, default=4768, ignore_none=True)  # A bit more than 4K
+    # Default HEAP ADDRESS (Dynamic memory) address
+    OPTIONS(Action.ADD_IF_NOT_DEFINED, name="heap_address", type=int, default=None, ignore_none=False)
     # Labels for HEAP START (might not be used if not needed)
     OPTIONS(Action.ADD_IF_NOT_DEFINED, name="heap_start_label", type=str, default=f"{NAMESPACE}.ZXBASIC_MEM_HEAP")
     # Labels for HEAP SIZE (might not be used if not needed)
@@ -806,8 +806,11 @@ def emit_start():
 
     if REQUIRES.intersection(MEMINITS) or f"{NAMESPACE}.__MEM_INIT" in INITS:
         heap_init.append("; Defines HEAP SIZE\n" + OPTIONS.heap_size_label + " EQU " + str(OPTIONS.heap_size))
-        heap_init.append(OPTIONS.heap_start_label + ":")
-        heap_init.append("DEFS %s" % str(OPTIONS.heap_size))
+        if OPTIONS.heap_address is None:
+            heap_init.append(OPTIONS.heap_start_label + ":")
+            heap_init.append("DEFS %s" % str(OPTIONS.heap_size))
+        else:
+            heap_init.append("; Defines HEAP ADDRESS\n" + OPTIONS.heap_start_label + " EQU %s" % OPTIONS.heap_address)
 
     heap_init.append(
         "; Defines USER DATA Length in bytes\n"
